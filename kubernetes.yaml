@@ -1,0 +1,65 @@
+-- Sample data for AI Prompt Generator SaaS
+-- Use this for testing and demo purposes
+
+-- Insert sample users
+INSERT INTO users (id, email, username, full_name, hashed_password, is_verified, subscription_tier, created_at) 
+VALUES 
+    ('user-001', 'demo@promptgenerator.com', 'demouser', 'Demo User', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5EQVlUee.IzHi', true, 'pro', CURRENT_TIMESTAMP),
+    ('user-002', 'teacher@promptgenerator.com', 'teacherjohn', 'John Teacher', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5EQVlUee.IzHi', true, 'pro', CURRENT_TIMESTAMP),
+    ('user-003', 'student@promptgenerator.com', 'studentmary', 'Mary Student', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5EQVlUee.IzHi', true, 'free', CURRENT_TIMESTAMP);
+
+-- Insert sample prompts
+INSERT INTO prompts (id, creator_id, title, description, content, topic, audience, skill_level, format, category, is_public, quality_score, created_at)
+VALUES 
+    (
+        'prompt-001',
+        'user-001',
+        'Python Functions for Beginners',
+        'Complete guide to understanding and using Python functions with real examples',
+        'Functions are reusable blocks of code that perform specific tasks. In Python, you define a function using the def keyword...',
+        'Python',
+        'school',
+        'beginner',
+        'tutorial',
+        'Programming',
+        true,
+        85,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'prompt-002',
+        'user-002',
+        'REST API Design Best Practices',
+        'Learn how to design scalable and maintainable REST APIs',
+        'REST APIs follow certain principles for efficient communication between client and server...',
+        'API Design',
+        'college',
+        'intermediate',
+        'code',
+        'Web Development',
+        true,
+        90,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'prompt-003',
+        'user-003',
+        'Kubernetes Deployment Guide',
+        'Production-ready Kubernetes deployment strategies',
+        'Kubernetes is a container orchestration platform that automates deployment, scaling, and management...',
+        'Kubernetes',
+        'professional',
+        'advanced',
+        'tutorial',
+        'DevOps',
+        false,
+        75,
+        CURRENT_TIMESTAMP
+    );
+
+-- Insert sample audit logs
+INSERT INTO audit_logs (id, user_id, action, resource_type, resource_id, details, created_at)
+VALUES 
+    ('log-001', 'user-001', 'login', 'user', 'user-001', 'Login successful', CURRENT_TIMESTAMP),
+    ('log-002', 'user-001', 'create', 'prompt', 'prompt-001', 'Created prompt: Python Functions for Beginners', CURRENT_TIMESTAMP),
+    ('log-003', 'user-002', 'login', 'user', 'user-002', 'Login successful', CURRENT_TIMESTAMP);

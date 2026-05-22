@@ -1,0 +1,114 @@
+"""Prompt service"""
+import uuid
+from sqlalchemy.orm import Session
+from datetime import datetime
+from ..models.prompt import Prompt
+from ..schemas.prompt import PromptCreate, PromptUpdate
+
+
+class PromptService:
+    """Service for prompt operations"""
+
+    @staticmethod
+    def create_prompt(db: Session, creator_id: str, prompt_create: PromptCreate) -> Prompt:
+        """Create new prompt"""
+        db_prompt = Prompt(
+            id=str(uuid.uuid4()),
+            creator_id=creator_id,
+            title=prompt_create.title,
+            description=prompt_create.description,
+            content=prompt_create.content,
+            topic=prompt_create.topic,
+            audience=prompt_create.audience,
+            skill_level=prompt_create.skill_level,
+            format=prompt_create.format,
+            category=prompt_create.category,
+            tags=prompt_create.tags,
+            is_public=prompt_create.is_public,
+        )
+        db.add(db_prompt)
+        db.commit()
+        db.refresh(db_prompt)
+        return db_prompt
+
+    @staticmethod
+    def get_prompt_by_id(db: Session, prompt_id: str) -> Prompt:
+        """Get prompt by ID"""
+        return db.query(Prompt).filter(Prompt.id == prompt_id).first()
+
+    @staticmethod
+    def get_user_prompts(db: Session, creator_id: str, skip: int = 0, limit: int = 10):
+        """Get prompts by creator"""
+        return db.query(Prompt).filter(
+            Prompt.creator_id == creator_id
+        ).offset(skip).limit(limit).all()
+
+    @staticmethod
+    def get_public_prompts(db: Session, skip: int = 0, limit: int = 10):
+        """Get public prompts"""
+        return db.query(Prompt).filter(
+            Prompt.is_public == True
+        ).order_by(Prompt.created_at.desc()).offset(skip).limit(limit).all()
+
+    @staticmethod
+    def search_prompts(db: Session, topic: str = None, audience: str = None, 
+                      format: str = None, skip: int = 0, limit: int = 10):
+        """Search prompts with filters"""
+        query = db.query(Prompt).filter(Prompt.is_public == True)
+        
+        if topic:
+            query = query.filter(Prompt.topic == topic)
+        if audience:
+            query = query.filter(Prompt.audience == audience)
+        if format:
+            query = query.filter(Prompt.format == format)
+        
+        return query.order_by(Prompt.created_at.desc()).offset(skip).limit(limit).all()
+
+    @staticmethod
+    def update_prompt(db: Session, prompt_id: str, creator_id: str, 
+                     prompt_update: PromptUpdate) -> Prompt:
+        """Update prompt"""
+        db_prompt = PromptService.get_prompt_by_id(db, prompt_id)
+        if not db_prompt or db_prompt.creator_id != creator_id:
+            return None
+        
+        update_data = prompt_update.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_prompt, field, value)
+        
+        db_prompt.updated_at = datetime.utcnow()
+        db.add(db_prompt)
+        db.commit()
+        db.refresh(db_prompt)
+        return db_prompt
+
+    @staticmethod
+    def delete_prompt(db: Session, prompt_id: str, creator_id: str) -> bool:
+        """Delete prompt"""
+        db_prompt = PromptService.get_prompt_by_id(db, prompt_id)
+        if not db_prompt or db_prompt.creator_id != creator_id:
+            return False
+        
+        db.delete(db_prompt)
+        db.commit()
+        return True
+
+    @staticmethod
+    def increment_view_count(db: Session, prompt_id: str) -> None:
+        """Increment view count"""
+        db_prompt = PromptService.get_prompt_by_id(db, prompt_id)
+        if db_prompt:
+            db_prompt.view_count += 1
+            db_prompt.last_used_at = datetime.utcnow()
+            db.add(db_prompt)
+            db.commit()
+
+    @staticmethod
+    def like_prompt(db: Session, prompt_id: str) -> None:
+        """Like prompt"""
+        db_prompt = PromptService.get_prompt_by_id(db, prompt_id)
+        if db_prompt:
+            db_prompt.like_count += 1
+            db.add(db_prompt)
+            db.commit()

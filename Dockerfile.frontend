@@ -1,0 +1,36 @@
+#!/bin/bash
+# Database initialization script for PostgreSQL
+
+set -e
+
+echo "Starting database initialization..."
+
+DB_HOST=${DB_HOST:-localhost}
+DB_PORT=${DB_PORT:-5432}
+DB_USER=${DB_USER:-postgres}
+DB_PASSWORD=${DB_PASSWORD:-}
+DB_NAME=${DB_NAME:-prompt_generator_db}
+APP_USER=${APP_USER:-promptgenerator}
+APP_PASSWORD=${APP_PASSWORD:-password}
+
+# Export password for psql
+export PGPASSWORD=$DB_PASSWORD
+
+echo "Creating database $DB_NAME..."
+psql -h $DB_HOST -p $DB_PORT -U $DB_USER -tc "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1 || \
+    psql -h $DB_HOST -p $DB_PORT -U $DB_USER -c "CREATE DATABASE $DB_NAME;"
+
+echo "Creating application user $APP_USER..."
+psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -tc "SELECT 1 FROM pg_user WHERE usename = '$APP_USER'" | grep -q 1 || \
+    psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "CREATE USER $APP_USER WITH PASSWORD '$APP_PASSWORD';"
+
+echo "Granting privileges..."
+psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $APP_USER;"
+
+echo "Creating schema..."
+psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f schema.sql
+
+echo "Loading sample data..."
+psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f sample_data.sql
+
+echo "Database initialization completed!"
